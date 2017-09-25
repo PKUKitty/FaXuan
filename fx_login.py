@@ -1,7 +1,8 @@
 import urllib
+import urllib2
 
 import requests
-import http.cookiejar
+import cookielib
 import time
 import os.path
 
@@ -11,12 +12,13 @@ except:
     pass
 
 accept = 'application/json, text/javascript, */*; q=0.01'
-agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
+# agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'
+agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36';
 
 headers = {
-    'Accept': accept,
+    'Accept': '*/*',
     'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'zh-CN,zh;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6',
     'Connection': 'keep-alive',
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     'Host': 'www.faxuan.net',
@@ -28,20 +30,20 @@ HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
 
 session = requests.session()
 cookie_filename = 'cookie.txt'
-cookie = http.cookiejar.MozillaCookieJar(cookie_filename)
+cookie = cookielib.MozillaCookieJar(cookie_filename)
 
 
 def get_rid():
-    return '2669d4dfbebbd2c8a80ce9f9112f6a01'
-    handler = urllib.request.HTTPCookieProcessor(cookie)
-    opener = urllib.request.build_opener(handler)
-    request = urllib.request.Request(HOME_PAGE_URL, None, headers)
+    return '3510b8894ac3147f7df1b26f7b34c213'
+    handler = urllib2.HTTPCookieProcessor(cookie)
+    opener = urllib2.build_opener(handler)
+    request = urllib2.Request(HOME_PAGE_URL, None, headers)
     try:
         res = opener.open(request)
         page = res.read().decode()
         # print(page)
-    except urllib.error.URLError as e:
-        print(e.code, ':', e.reason)
+    except urllib2.URLError as e:
+        print(e.errno, ':', e.reason)
 
     cookie.save(None, True, True)
     for item in cookie:
@@ -49,11 +51,10 @@ def get_rid():
         return item.value
 
 
-def get_captcha():
-    tt = str(int(time.time() * 1000))
-    captcha_url = 'http://xf.faxuan.net/service/gc.html?tt=' + tt
+def get_captcha(timestamp):
+    captcha_url = 'http://xf.faxuan.net/service/gc.html?timestamp=' + timestamp
     print(captcha_url)
-    r = session.get(captcha_url, headers=headers)
+    r = requests.get(captcha_url, headers=headers)
     with open('captcha.jpg', 'wb') as f:
         f.write(r.content)
         f.close()
@@ -62,35 +63,43 @@ def get_captcha():
         im.show()
         im.close()
     except:
-        print(u'请到 %s 目录找到captcha.jpg 手动输入' % os.path.abspath('captcha.jpg'))
+        print(u'pls change directory %s captcha.jpg ' % os.path.abspath('captcha.jpg'))
 
-    captcha = input("pls input the captcha\n>")
+    captcha = raw_input("pls input the captcha\n>")
     print("captcha: " + captcha)
-    return captcha
+    return captcha, r.cookies
 
 
 def login(user_name, password):
-    cookie.load(cookie_filename, True, True)
-    handler = urllib.request.HTTPCookieProcessor(cookie)
-    opener = urllib.request.build_opener(handler)
-    post_url = 'http://xf.faxuan.net/bss/service/userService!doUserLogin.do'
+    post_url = 'http://www.faxuan.net/shop/api/xf_login'
+    tt = str(int(time.time() * 1000))
+    data = get_captcha(tt)
     post_data_values = {
-        'userAccount': user_name,
-        'userPassword': password,
-        'code': get_captcha(),
+        'user_name': user_name,
+        'user_pass': password,
+        'code': data[0],
         'rid': get_rid(),
-        'key': 1
+        # 'key': 13
     }
 
-    post_data = urllib.parse.urlencode(post_data_values).encode()
-    print(post_data)
-    get_request = urllib.request.Request(post_url, post_data, headers)
-    get_response = opener.open(get_request)
-    print(get_response.read().decode())
+    # get_url = 'http://xf.faxuan.net/bss/service/userService!doUserLogin.do?userAccount=' + user_name + '&userPassword=' + password + '&code=' + data + '&rid=' + get_rid() + '&key=1'
+    # print get_url
+
+    resp = requests.post(post_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(data[1]),
+                         data=post_data_values)
+    # resp = requests.get(get_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(cookies))
+    print(resp.content)
+
+
+def get_cookies():
+    res = requests.get('http://www.faxuan.net/site/yunnan/')
+    # print res.content
+    return res.cookies
 
 
 if __name__ == '__main__':
-    user_name = '5306270870205'
+    user_name = '15094279360'
     password = 'y888888'
-    # get_rid()
+    # get_cookies()
+
     login(user_name, password)
