@@ -6,8 +6,10 @@ import cookielib
 import time
 import os.path
 
+from selenium import webdriver
+
 try:
-    from PIL import Image
+    from PIL import Image, ImageEnhance
 except:
     pass
 
@@ -29,8 +31,10 @@ headers = {
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
 
 session = requests.session()
-cookie_filename = 'cookie.txt'
-cookie = cookielib.MozillaCookieJar(cookie_filename)
+
+cookie = cookielib.CookieJar()
+handler = urllib2.HTTPCookieProcessor(cookie)
+opener = urllib2.build_opener(handler)
 
 
 def get_rid():
@@ -54,9 +58,10 @@ def get_rid():
 def get_captcha(timestamp):
     captcha_url = 'http://xf.faxuan.net/service/gc.html?timestamp=' + timestamp
     print(captcha_url)
-    r = requests.get(captcha_url, headers=headers)
+    r = opener.open(captcha_url).read()
+    # r = requests.get(captcha_url, headers=headers)
     with open('captcha.jpg', 'wb') as f:
-        f.write(r.content)
+        f.write(r)
         f.close()
     try:
         im = Image.open('captcha.jpg')
@@ -67,28 +72,38 @@ def get_captcha(timestamp):
 
     captcha = raw_input("pls input the captcha\n>")
     print("captcha: " + captcha)
-    return captcha, r.cookies
+    return captcha
 
 
 def login(user_name, password):
     post_url = 'http://www.faxuan.net/shop/api/xf_login'
     tt = str(int(time.time() * 1000))
-    data = get_captcha(tt)
     post_data_values = {
         'user_name': user_name,
         'user_pass': password,
-        'code': data[0],
+        'code': get_captcha(tt),
         'rid': get_rid(),
         # 'key': 13
     }
 
+    data = urllib.urlencode(post_data_values)
+
     # get_url = 'http://xf.faxuan.net/bss/service/userService!doUserLogin.do?userAccount=' + user_name + '&userPassword=' + password + '&code=' + data + '&rid=' + get_rid() + '&key=1'
     # print get_url
 
-    resp = requests.post(post_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(data[1]),
-                         data=post_data_values)
-    # resp = requests.get(get_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(cookies))
-    print(resp.content)
+    request = urllib2.Request(post_url, data, headers)
+
+    try:
+        response = opener.open(request)
+        result = response.read().decode('gb2312')
+        print result
+    except urllib2.HTTPError, e:
+        print e.code
+
+        # resp = requests.post(post_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(data[1]),
+        #                      data=post_data_values)
+        # # resp = requests.get(get_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(cookies))
+        # print(resp.content)
 
 
 def get_cookies():
@@ -102,4 +117,33 @@ if __name__ == '__main__':
     password = 'y888888'
     # get_cookies()
 
-    login(user_name, password)
+    # login(user_name, password)
+
+    driver = webdriver.Chrome()
+    driver.get('http://www.faxuan.net/site/yunnan/')
+
+    elem_user = driver.find_element_by_id('user_name')
+    elem_psw = driver.find_element_by_id('user_pass')
+    elem_code = driver.find_element_by_id('code')
+
+    image_name = '/Users/yujun/PycharmProjects/FaXuan/login.png'
+    driver.get_screenshot_as_file(image_name)
+    img = Image.open(image_name)
+    box = (555, 750, 680, 830)
+    region = img.crop(box)
+    region.save('captcha.png')
+    im = Image.open('captcha.png')
+    imgry = im.convert('L')
+    sharpness = ImageEnhance.Contrast(imgry)
+    sharp_img = sharpness.enhance(2.0)
+    sharp_img.save('captcha.png')
+
+    driver.quit()
+
+    # captcha = raw_input("pls input the captcha\n>")
+    # elem_user.send_keys(user_name)
+    # elem_psw.send_keys(password)
+    # elem_code.send_keys(captcha)
+    # click_login = driver.find_element_by_class_name('login_button')
+    # click_login.click()
+    # driver.quit()
