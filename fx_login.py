@@ -140,10 +140,10 @@ if __name__ == '__main__':
 
     driver.quit()
 
-    # captcha = raw_input("pls input the captcha\n>")
-    # elem_user.send_keys(user_name)
-    # elem_psw.send_keys(password)
-    # elem_code.send_keys(captcha)
-    # click_login = driver.find_element_by_class_name('login_button')
-    # click_login.click()
-    # driver.quit()
+    captcha = raw_input("pls input the captcha\n>")
+    elem_user.send_keys(user_name)
+    elem_psw.send_keys(password)
+    elem_code.send_keys(captcha)
+    click_login = driver.find_element_by_class_name('login_button')
+    click_login.click()
+    driver.quit()
