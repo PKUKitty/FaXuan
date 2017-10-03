@@ -118,23 +118,99 @@ def ger_random_qq():
     return '12345678'  # TODO
 
 
-if __name__ == '__main__':
-    user_name = '15094279360'
-    password = 'y888888'
-    # get_cookies()
+def modify_profile(profile_driver):
+    modifyProfile = profile_driver.find_element_by_xpath(".//div[@class='userimg']/a")
+    modifyProfile.get_attribute("href")
+    modifyProfile.click()
 
-    # login(user_name, password)
+    user_info_address = profile_driver.find_element_by_id('userAddress')
+    user_info_address.send_keys('beijing')
+    print 'user address qq end'
 
-    driver = webdriver.Firefox()
-    driver.get(HOME_PAGE_URL)
+    time.sleep(2)
+    current_win = profile_driver.current_window_handle
+    user_info_save = profile_driver.find_element_by_id('userInfo_2_queren')
+    user_info_save.click()
+    print 'user info 2 queren'
+
+    time.sleep(2)
+    current_win = profile_driver.current_window_handle
+    user_info_confirm = profile_driver.find_element_by_id('popalertConfirm')
+    user_info_confirm.click()
+    print 'alert confirm'
+
+
+def study_course(course_driver, course_name):
+    my_study = course_driver.find_element_by_xpath(".//a[contains(@href, 'base.index2(1)')]")
+    my_study.get_attribute('href')
+    my_study.click()
+    time.sleep(5)
+    print 'click my study'
+    # driver.switch_to.window(driver.window_handles[-1])
+
+    # click must course
+    # must_courses = driver.find_element_by_id('bxCourse')
+    # must_courses.click()
+
+    # start study
+    # include all must courses
+    course_name = course_driver.find_element_by_xpath('/html/body/div/div/ul/li/div/a')
+    course_name.get_attribute('href')
+    course_name.click()
+    time.sleep(3)
+
+    # exs
+    driver.switch_to.window(driver.window_handles[-1])
+    exs_click = course_driver.find_element_by_xpath(".//ul[@class='coursetab clear']/li[3]")
+    exs_click.click()
+    print 'exs_click end'
+
+    start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1103')]")
+    start_exs_click.get_attribute('href')
+    start_exs_click.click()
     time.sleep(1)
-    cookie1 = driver.get_cookies()
 
-    elem_user = driver.find_element_by_id('user_name')
-    elem_psw = driver.find_element_by_id('user_pass')
-    elem_code = driver.find_element_by_id('code')
+    course_driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(10)
 
-    # image_name = '/Users/yujun/PycharmProjects/FaXuan/login.png'
+    commit_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, 'myCommit')]")
+    commit_exs_click.get_attribute('href')
+    commit_exs_click.click()
+    time.sleep(1)
+
+    current_win = driver.current_window_handle
+    exit_exs_confirm = course_driver.find_element_by_id('popwinConfirm')
+    exit_exs_confirm.get_attribute('href')
+    exit_exs_confirm.click()
+    print 'exit_exs_confirm'
+
+    # close tab
+    course_driver.close()
+
+    start = time.time()
+    duration = 30 * 60
+    while True:
+        if time.time() - start > duration:
+            break
+        else:
+            time.sleep(10)
+            continue
+
+    course_driver.switch_to.window(driver.window_handles[-1])
+    exit_study = course_driver.find_element_by_xpath(".//a[contains(@href, 'exitStudy')]")
+    exit_study.get_attribute('href')
+    exit_study.click()
+    print 'exit study'
+
+    time.sleep(1)
+    current_win = driver.current_window_handle
+    exit_study_confirm = driver.find_element_by_id('popwinConfirm')
+    # exit_study_confirm.get_attribute('href')
+    exit_study_confirm.click()
+    print 'exit_study_confirm'
+
+
+def captchaProcessor():
     image_name = 'home_page.png'
     driver.get_screenshot_as_file(image_name)
     img = Image.open(image_name)
@@ -147,133 +223,90 @@ if __name__ == '__main__':
     sharp_img = sharpness.enhance(2.0)
     sharp_img.save('captcha.png')
 
-    # captcha = raw_input("pls input the captcha\n>")
     captcha = pytesseract.image_to_string(sharp_img)
+    return captcha.replace(' ', '')  # replace all space
     print 'captcha:'
     print captcha
 
-    is_login = False
-    if captcha:
-        elem_user.send_keys(user_name)
-        elem_psw.send_keys(password)
-        elem_code.send_keys(captcha)
-        click_login = driver.find_element_by_class_name('login_button')
-        click_login.click()
-        cookie2 = driver.get_cookies()
-        if cookie1 != cookie2:
-            is_login = True
 
-    else:
-        driver.quit()
-        exit()
-    # if not is_login:
-    #     print 'login failed'
-    #     driver.quit()  # TODO
-    #     exit()
+if __name__ == '__main__':
+    user_name = '15094279360'
+    password = 'y888888'
+    # get_cookies()
 
-    # click to modify profile,
-    time.sleep(2)
-    current_window = driver.current_window_handle
-    modifyProfile = driver.find_element_by_xpath("//a[contains(@href, ‘navindex’)]")
-    modifyProfile.get_attribute("href")
-    modifyProfile.click()
-    user_info_qq = driver.find_element_by_id('userinfoQQ')
-    user_info_qq.send_keys(ger_random_qq())
+    # login(user_name, password)
 
-    user_info_save = driver.find_element_by_id('userInfo_2_queren')
-    user_info_save.click()
-    # time sleep
+    driver = webdriver.Firefox()
+    driver.get(HOME_PAGE_URL)
     time.sleep(1)
 
-    user_info_confirm = driver.find_element_by_id('popalertConfirm')
-    user_info_confirm.click()
-    time.sleep(3)
+    elem_user = driver.find_element_by_id('user_name')
+    elem_psw = driver.find_element_by_id('user_pass')
+    elem_code = driver.find_element_by_id('code')
+
+    is_login = False
+    login_times = 0
+
+    while login_times < 10:
+        captcha = captchaProcessor()
+        if len(captcha) == 4:
+            elem_user.send_keys(user_name)
+            elem_psw.send_keys(password)
+            elem_code.send_keys(captcha)
+            click_login = driver.find_element_by_class_name('login_button')
+            click_login.click()
+            time.sleep(5)
+
+            if len(driver.window_handles) == 2:
+                is_login = True
+                break
+            else:
+                current_win = driver.current_window_handle
+                close_button = driver.find_element_by_class_name('close_button')
+                close_button.get_attribute('href')
+                time.sleep(1)
+                close_button.click()
+                time.sleep(1)
+
+                # refresh captcha
+                change_testword = driver.find_element_by_class_name('change_testword')
+                change_testword.get_attribute('href')
+                change_testword.click()
+                time.sleep(1)
+                login_times = login_times + 1
+                print 'login times: ' + str(login_times)
+
+                elem_user.clear()
+                elem_psw.clear()
+                elem_code.clear()
+        else:
+            # refresh captcha
+            change_testword = driver.find_element_by_class_name('change_testword')
+            change_testword.get_attribute('href')
+            change_testword.click()
+            time.sleep(1)
+            login_times = login_times + 1
+            print "login times: " + str(login_times)
+
+            elem_user.clear()
+            elem_psw.clear()
+            elem_code.clear()
+
+    if not is_login:
+        print 'login failed'
+        driver.quit()  # TODO
+        exit()
+
+    # click to modify profile,
+    time.sleep(10)
+    driver.switch_to.window(driver.window_handles[-1])
+
+    # modify_profile(driver)
+
+    study_course(driver, "aaaa")
+
+    study_course(driver, "aaaa")
 
     time.sleep(10)
     driver.quit()
     exit()
-
-    my_study = driver.find_element_by_link_text('javascript:base.index2(1)')
-    my_study.click()
-    time.sleep(3)
-
-    # click must course
-    must_courses = driver.find_element_by_id('bxCourse')
-    must_courses.click()
-
-    # start study
-    # include all must courses
-    country_security = driver.find_element_by_link_text('中华人民共和国国家安全法》...')
-    country_security.click()
-    time.sleep(3)
-
-    start = time.time()
-    duration = 30 * 60
-    # country_security_timer = driver.find_element_by_id('timer')
-    while True:
-        if time.time() - start > duration:
-            break
-        else:
-            time.sleep(10)
-            continue
-    exit_study = driver.find_element_by_link_text('退出学习')
-    exit_study.click()
-
-    exit_study_confirm = driver.find_element_by_id('popwinConfirm')
-    exit_study_confirm.click()
-    time.sleep(1)
-
-    # must courses
-    constitution = driver.find_element_by_link_text('宪法知识读本')
-    constitution.click()
-    time.sleep(3)
-
-    start = time.time()
-    while True:
-        if time.time() - start > duration:
-            break
-        else:
-            time.sleep(10)
-            continue
-    constitution_exit_study = driver.find_element_by_link_text('退出学习')
-    constitution_exit_study.click()
-
-    constitution_exit_study_confirm = driver.find_element_by_id('popwinConfirm')
-    constitution_exit_study_confirm.click()
-    time.sleep(1)
-
-    # must courses
-    yunnan = driver.find_element_by_link_text('云南省农村扶贫开发条例')
-    yunnan.click()
-    time.sleep(3)
-
-    start = time.time()
-    while True:
-        if time.time() - start > duration:
-            break
-        else:
-            time.sleep(10)
-            continue
-    yunnan_exit_study = driver.find_element_by_link_text('退出学习')
-    yunnan_exit_study.click()
-
-    yunnan_exit_study_confirm = driver.find_element_by_id('popwinConfirm')
-    yunnan_exit_study_confirm.click()
-    time.sleep(1)
-
-    # start
-    country_security = driver.find_element_by_link_text('中华人民共和国国家安全法》...')
-    country_security.click()
-    time.sleep(3)
-
-    course_exs = driver.find_element_by_link_text('课程练习')
-    course_exs.click()
-
-    start_exs = driver.find_element_by_link_text('开始练习')
-    start_exs.click()
-
-    time.sleep(20)
-    submit_exs = driver.find_element_by_link_text('提交练习')
-    submit_exs.click()
-
-    driver.quit()
