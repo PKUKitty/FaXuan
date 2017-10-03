@@ -1,143 +1,44 @@
 # coding=utf-8
-import urllib
-import urllib2
-
-import requests
-import cookielib
 import time
 import os.path
+import random
+
+import redis
 
 from pytesseract import pytesseract
 from selenium import webdriver
-
-try:
-    from PIL import Image, ImageEnhance
-except:
-    pass
-
-accept = 'application/json, text/javascript, */*; q=0.01'
-agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/61.0.3163.79 Chrome/61.0.3163.79 Safari/537.36'
-# agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36';
-
-headers = {
-    'Accept': '*/*',
-    'Accept-Encoding': 'gzip, deflate',
-    'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6',
-    'Connection': 'keep-alive',
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'Host': 'www.faxuan.net',
-    'Origin': 'http://www.faxuan.net',
-    'User-Agent': agent
-}
+from PIL import Image, ImageEnhance
 
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
 
-session = requests.session()
-
-cookie = cookielib.CookieJar()
-handler = urllib2.HTTPCookieProcessor(cookie)
-opener = urllib2.build_opener(handler)
-
-
-def get_rid():
-    return '3510b8894ac3147f7df1b26f7b34c213'
-    handler = urllib2.HTTPCookieProcessor(cookie)
-    opener = urllib2.build_opener(handler)
-    request = urllib2.Request(HOME_PAGE_URL, None, headers)
-    try:
-        res = opener.open(request)
-        page = res.read().decode()
-        # print(page)
-    except urllib2.URLError as e:
-        print(e.errno, ':', e.reason)
-
-    cookie.save(None, True, True)
-    for item in cookie:
-        # print(item.value)
-        return item.value
-
-
-def get_captcha(timestamp):
-    captcha_url = 'http://xf.faxuan.net/service/gc.html?timestamp=' + timestamp
-    print(captcha_url)
-    r = opener.open(captcha_url).read()
-    # r = requests.get(captcha_url, headers=headers)
-    with open('captcha.jpg', 'wb') as f:
-        f.write(r)
-        f.close()
-    try:
-        im = Image.open('captcha.jpg')
-        im.show()
-        im.close()
-    except:
-        print(u'pls change directory %s captcha.jpg ' % os.path.abspath('captcha.jpg'))
-
-    captcha = raw_input("pls input the captcha\n>")
-    print("captcha: " + captcha)
-    return captcha
-
-
-def login(user_name, password):
-    post_url = 'http://www.faxuan.net/shop/api/xf_login'
-    tt = str(int(time.time() * 1000))
-    post_data_values = {
-        'user_name': user_name,
-        'user_pass': password,
-        'code': get_captcha(tt),
-        'rid': get_rid(),
-        # 'key': 13
-    }
-
-    data = urllib.urlencode(post_data_values)
-
-    # get_url = 'http://xf.faxuan.net/bss/service/userService!doUserLogin.do?userAccount=' + user_name + '&userPassword=' + password + '&code=' + data + '&rid=' + get_rid() + '&key=1'
-    # print get_url
-
-    request = urllib2.Request(post_url, data, headers)
-
-    try:
-        response = opener.open(request)
-        result = response.read().decode('gb2312')
-        print result
-    except urllib2.HTTPError, e:
-        print e.code
-
-        # resp = requests.post(post_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(data[1]),
-        #                      data=post_data_values)
-        # # resp = requests.get(get_url, headers=headers, cookies=requests.utils.dict_from_cookiejar(cookies))
-        # print(resp.content)
-
-
-def get_cookies():
-    res = requests.get('http://www.faxuan.net/site/yunnan/')
-    # print res.content
-    return res.cookies
-
 
 def ger_random_qq():
-    return '12345678'  # TODO
+    qq = ''
+    for i in range(0, 9):
+        qq = qq + str(random.randint(1, 9))
+    return qq
 
 
 def modify_profile(profile_driver):
-    modifyProfile = profile_driver.find_element_by_xpath(".//div[@class='userimg']/a")
-    modifyProfile.get_attribute("href")
-    modifyProfile.click()
+    modify_pro = profile_driver.find_element_by_xpath(".//div[@class='userimg']/a")
+    modify_pro.get_attribute("href")
+    modify_pro.click()
 
     user_info_address = profile_driver.find_element_by_id('userAddress')
     user_info_address.send_keys('beijing')
-    print 'user address qq end'
+
+    user_info_qq = profile_driver.find_element_by_id('userinfoQQ')
+    user_info_qq.send_keys(ger_random_qq())
 
     time.sleep(2)
-    current_win = profile_driver.current_window_handle
+    var = profile_driver.current_window_handle
     user_info_save = profile_driver.find_element_by_id('userInfo_2_queren')
     user_info_save.click()
-    print 'user info 2 queren'
 
     time.sleep(2)
     current_win = profile_driver.current_window_handle
     user_info_confirm = profile_driver.find_element_by_id('popalertConfirm')
     user_info_confirm.click()
-    print 'alert confirm'
 
 
 def study_course(course_driver, course_name):
@@ -184,11 +85,21 @@ def study_course(course_driver, course_name):
     exit_exs_confirm.click()
     print 'exit_exs_confirm'
 
+    # write exs into redis
+    # paper_key_value = {}
+    # results = course_driver.find_elements_by_id('result')
+    # tmp_count = 0
+    # while tmp_count < 10:
+    #     xpath = ".//ul[@id='result']/li[" + str(tmp_count + 1) + "]/h3"
+    #     question = course_driver.find_element_by_xpath(xpath)
+    #     print 'question: ' + question.text
+    #     tmp_count = tmp_count + 1
+
     # close tab
     course_driver.close()
 
     start = time.time()
-    duration = 30 * 60
+    duration = 1 * 60
     while True:
         if time.time() - start > duration:
             break
@@ -205,36 +116,41 @@ def study_course(course_driver, course_name):
     time.sleep(1)
     current_win = driver.current_window_handle
     exit_study_confirm = driver.find_element_by_id('popwinConfirm')
-    # exit_study_confirm.get_attribute('href')
+    exit_study_confirm.get_attribute('href')
     exit_study_confirm.click()
     print 'exit_study_confirm'
 
 
-def captchaProcessor():
-    image_name = 'home_page.png'
-    driver.get_screenshot_as_file(image_name)
-    img = Image.open(image_name)
+def captcha_processor():
+    hp_image_name = 'home_page.png'
+    driver.get_screenshot_as_file(hp_image_name)
+    img = Image.open(hp_image_name)
     box = (285, 380, 345, 415)
     region = img.crop(box)
-    region.save('captcha.png')
-    im = Image.open('captcha.png')
+
+    captcha_img_name = 'captcha.png'
+    region.save(captcha_img_name)
+    im = Image.open(captcha_img_name)
     imgry = im.convert('L')
     sharpness = ImageEnhance.Contrast(imgry)
     sharp_img = sharpness.enhance(2.0)
-    sharp_img.save('captcha.png')
+    sharp_img.save(captcha_img_name)
 
     captcha = pytesseract.image_to_string(sharp_img)
+
+    if os.path.exists(hp_image_name):
+        os.remove(hp_image_name)
+    if os.path.exists(captcha_img_name):
+        os.remove(captcha_img_name)
+
     return captcha.replace(' ', '')  # replace all space
-    print 'captcha:'
-    print captcha
 
 
 if __name__ == '__main__':
     user_name = '15094279360'
     password = 'y888888'
-    # get_cookies()
 
-    # login(user_name, password)
+    # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
     driver = webdriver.Firefox()
     driver.get(HOME_PAGE_URL)
@@ -247,8 +163,8 @@ if __name__ == '__main__':
     is_login = False
     login_times = 0
 
-    while login_times < 10:
-        captcha = captchaProcessor()
+    while login_times < 20:
+        captcha = captcha_processor()
         if len(captcha) == 4:
             elem_user.send_keys(user_name)
             elem_psw.send_keys(password)
@@ -294,18 +210,18 @@ if __name__ == '__main__':
 
     if not is_login:
         print 'login failed'
-        driver.quit()  # TODO
+        driver.quit()
         exit()
 
     # click to modify profile,
     time.sleep(10)
     driver.switch_to.window(driver.window_handles[-1])
 
-    # modify_profile(driver)
+    modify_profile(driver)
 
-    study_course(driver, "aaaa")
+    # study_course(course_driver=driver, course_name="aaaa")
 
-    study_course(driver, "aaaa")
+    # study_course(driver, "aaaa")
 
     time.sleep(10)
     driver.quit()
