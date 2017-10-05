@@ -3,11 +3,14 @@ import time
 import os.path
 import random
 
-import redis
+# import redis
+import urllib
 
 from pytesseract import pytesseract
 from selenium import webdriver
 from PIL import Image, ImageEnhance
+
+import send_email
 
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
 
@@ -99,7 +102,7 @@ def study_course(course_driver, course_name):
     course_driver.close()
 
     start = time.time()
-    duration = 1 * 60
+    duration = 30 * 60
     while True:
         if time.time() - start > duration:
             break
@@ -114,9 +117,9 @@ def study_course(course_driver, course_name):
     print 'exit study'
 
     time.sleep(1)
-    current_win = driver.current_window_handle
+    # current_win = driver.current_window_handle
     exit_study_confirm = driver.find_element_by_id('popwinConfirm')
-    exit_study_confirm.get_attribute('href')
+    # exit_study_confirm.get_attribute('href')
     exit_study_confirm.click()
     print 'exit_study_confirm'
 
@@ -130,20 +133,25 @@ def captcha_processor():
 
     captcha_img_name = 'captcha.png'
     region.save(captcha_img_name)
+    # get img source
+    # captcha_img = driver.find_element_by_id('captcha')
+    # captcha_img_src = captcha_img.get_attribute('src')
+    # urllib.urlretrieve(captcha_img_src, captcha_img_name)
+
     im = Image.open(captcha_img_name)
     imgry = im.convert('L')
     sharpness = ImageEnhance.Contrast(imgry)
     sharp_img = sharpness.enhance(2.0)
     sharp_img.save(captcha_img_name)
 
-    captcha = pytesseract.image_to_string(sharp_img)
+    captcha_code = pytesseract.image_to_string(sharp_img)
 
     if os.path.exists(hp_image_name):
         os.remove(hp_image_name)
     if os.path.exists(captcha_img_name):
         os.remove(captcha_img_name)
 
-    return captcha.replace(' ', '')  # replace all space
+    return captcha_code.replace(' ', '')  # replace all space
 
 
 if __name__ == '__main__':
@@ -151,6 +159,10 @@ if __name__ == '__main__':
     password = 'y888888'
 
     # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
+
+    # test_send_email = send_email.SendEmail()
+    # test_send_email.send_msg()
+    # exit()
 
     driver = webdriver.Firefox()
     driver.get(HOME_PAGE_URL)
@@ -213,13 +225,14 @@ if __name__ == '__main__':
         driver.quit()
         exit()
 
+    # driver.maximize_window()
     # click to modify profile,
     time.sleep(10)
     driver.switch_to.window(driver.window_handles[-1])
 
     modify_profile(driver)
 
-    # study_course(course_driver=driver, course_name="aaaa")
+    study_course(course_driver=driver, course_name="aaaa")
 
     # study_course(driver, "aaaa")
 
