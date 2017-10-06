@@ -1,3 +1,9 @@
 README
 
 For father
+
+Usage:
+
+nohup ./fx_login.sh &
+
+

@@ -245,7 +245,7 @@ if __name__ == '__main__':
             if not is_login:
                 logger.debug("login failed")
                 driver.quit()
-                exit()
+                # exit()
 
             # driver.maximize_window()
             # click to modify profile,
