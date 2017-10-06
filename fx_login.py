@@ -1,4 +1,6 @@
 # coding=utf-8
+import logging
+import logging.handlers
 import time
 import os.path
 import random
@@ -9,6 +11,8 @@ import urllib
 from pytesseract import pytesseract
 from selenium import webdriver
 from PIL import Image, ImageEnhance
+
+from selenium.webdriver import DesiredCapabilities
 
 import send_email
 
@@ -45,11 +49,12 @@ def modify_profile(profile_driver):
 
 
 def study_course(course_driver, course_name):
+    driver.switch_to.window(driver.window_handles[-1])
     my_study = course_driver.find_element_by_xpath(".//a[contains(@href, 'base.index2(1)')]")
     my_study.get_attribute('href')
     my_study.click()
     time.sleep(5)
-    print 'click my study'
+    logger.debug("click my study")
     # driver.switch_to.window(driver.window_handles[-1])
 
     # click must course
@@ -67,7 +72,7 @@ def study_course(course_driver, course_name):
     driver.switch_to.window(driver.window_handles[-1])
     exs_click = course_driver.find_element_by_xpath(".//ul[@class='coursetab clear']/li[3]")
     exs_click.click()
-    print 'exs_click end'
+    logger.debug("exs_click end")
 
     start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1103')]")
     start_exs_click.get_attribute('href')
@@ -86,7 +91,7 @@ def study_course(course_driver, course_name):
     exit_exs_confirm = course_driver.find_element_by_id('popwinConfirm')
     exit_exs_confirm.get_attribute('href')
     exit_exs_confirm.click()
-    print 'exit_exs_confirm'
+    logger.debug("exit_exs_confirm")
 
     # write exs into redis
     # paper_key_value = {}
@@ -114,14 +119,14 @@ def study_course(course_driver, course_name):
     exit_study = course_driver.find_element_by_xpath(".//a[contains(@href, 'exitStudy')]")
     exit_study.get_attribute('href')
     exit_study.click()
-    print 'exit study'
+    logger.debug("exit study")
 
     time.sleep(1)
     # current_win = driver.current_window_handle
     exit_study_confirm = driver.find_element_by_id('popwinConfirm')
     # exit_study_confirm.get_attribute('href')
     exit_study_confirm.click()
-    print 'exit_study_confirm'
+    logger.debug("exit_study_confirm")
 
 
 def captcha_processor():
@@ -158,13 +163,24 @@ if __name__ == '__main__':
     user_name = '15094279360'
     password = 'y888888'
 
+    LOG_FILE = 'fx_login.log'
+    handler = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=1024 * 1024, backupCount=5)
+    fmt = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
+
+    formatter = logging.Formatter(fmt)
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger('fx_login')
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
     # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
-    # test_send_email = send_email.SendEmail()
-    # test_send_email.send_msg()
-    # exit()
+    firefox_capabilities = DesiredCapabilities.FIREFOX
+    firefox_capabilities['marionette'] = True
+    firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
 
-    driver = webdriver.Firefox()
+    driver = webdriver.Firefox(capabilities=firefox_capabilities)
     driver.get(HOME_PAGE_URL)
     time.sleep(1)
 
@@ -202,7 +218,7 @@ if __name__ == '__main__':
                 change_testword.click()
                 time.sleep(1)
                 login_times = login_times + 1
-                print 'login times: ' + str(login_times)
+                logger.debug('login times: ' + str(login_times))
 
                 elem_user.clear()
                 elem_psw.clear()
@@ -214,14 +230,14 @@ if __name__ == '__main__':
             change_testword.click()
             time.sleep(1)
             login_times = login_times + 1
-            print "login times: " + str(login_times)
+            logger.debug("login times: " + str(login_times))
 
             elem_user.clear()
             elem_psw.clear()
             elem_code.clear()
 
     if not is_login:
-        print 'login failed'
+        logger.debug("login failed")
         driver.quit()
         exit()
 
@@ -232,10 +248,19 @@ if __name__ == '__main__':
 
     modify_profile(driver)
 
+    logger.debug("-----course 1-------")
     study_course(course_driver=driver, course_name="aaaa")
 
-    # study_course(driver, "aaaa")
+    logger.debug("-----course 2-------")
+    study_course(driver, "aaaa")
+
+    logger.debug("-----course 3-------")
+    study_course(driver, "aaaa")
 
     time.sleep(10)
     driver.quit()
+
+    test_send_email = send_email.SendEmail()
+    test_send_email.send_msg()
+
     exit()

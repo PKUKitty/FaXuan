@@ -10,13 +10,13 @@ class SendEmail:
     user_name = 'yujun@travelsky.com'
     user_password = 'Yj1314520'
 
-    subject = 'send email'
+    subject = 'fx login'
     sender = 'yujun@travelsky.com'
     receiver = 'yujun@travelsky.com'
     smtp_server = 'smtpav.travelsky.com'
 
     def send_msg(self):
-        msg = MIMEText('Hello test mail', 'text', 'UTF-8')
+        msg = MIMEText('fx login, success', 'text', 'UTF-8')
         msg['Subject'] = Header(self.subject, 'utf-8')
 
         smtp = smtplib.SMTP()
