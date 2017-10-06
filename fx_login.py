@@ -8,6 +8,7 @@ import random
 # import redis
 import urllib
 
+import datetime
 from pytesseract import pytesseract
 from selenium import webdriver
 from PIL import Image, ImageEnhance
@@ -163,7 +164,7 @@ if __name__ == '__main__':
     user_name = '15094279360'
     password = 'y888888'
 
-    LOG_FILE = 'fx_login.log'
+    LOG_FILE = '/home/yujun/PycharmProjects/FaXuan/fx_login.log'
     handler = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=1024 * 1024, backupCount=5)
     fmt = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
 
@@ -176,91 +177,99 @@ if __name__ == '__main__':
 
     # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
-    firefox_capabilities = DesiredCapabilities.FIREFOX
-    firefox_capabilities['marionette'] = True
-    firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
+    while True:
+        now_hour = datetime.datetime.now().strftime('%H')
 
-    driver = webdriver.Firefox(capabilities=firefox_capabilities)
-    driver.get(HOME_PAGE_URL)
-    time.sleep(1)
+        if now_hour == str(1):
+            firefox_capabilities = DesiredCapabilities.FIREFOX
+            firefox_capabilities['marionette'] = True
+            firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
 
-    elem_user = driver.find_element_by_id('user_name')
-    elem_psw = driver.find_element_by_id('user_pass')
-    elem_code = driver.find_element_by_id('code')
-
-    is_login = False
-    login_times = 0
-
-    while login_times < 20:
-        captcha = captcha_processor()
-        if len(captcha) == 4:
-            elem_user.send_keys(user_name)
-            elem_psw.send_keys(password)
-            elem_code.send_keys(captcha)
-            click_login = driver.find_element_by_class_name('login_button')
-            click_login.click()
-            time.sleep(5)
-
-            if len(driver.window_handles) == 2:
-                is_login = True
-                break
-            else:
-                current_win = driver.current_window_handle
-                close_button = driver.find_element_by_class_name('close_button')
-                close_button.get_attribute('href')
-                time.sleep(1)
-                close_button.click()
-                time.sleep(1)
-
-                # refresh captcha
-                change_testword = driver.find_element_by_class_name('change_testword')
-                change_testword.get_attribute('href')
-                change_testword.click()
-                time.sleep(1)
-                login_times = login_times + 1
-                logger.debug('login times: ' + str(login_times))
-
-                elem_user.clear()
-                elem_psw.clear()
-                elem_code.clear()
-        else:
-            # refresh captcha
-            change_testword = driver.find_element_by_class_name('change_testword')
-            change_testword.get_attribute('href')
-            change_testword.click()
+            driver = webdriver.Firefox(capabilities=firefox_capabilities,
+                                       log_path='/home/yujun/PycharmProjects/FaXuan/geckodriver.log')
+            driver.get(HOME_PAGE_URL)
             time.sleep(1)
-            login_times = login_times + 1
-            logger.debug("login times: " + str(login_times))
 
-            elem_user.clear()
-            elem_psw.clear()
-            elem_code.clear()
+            elem_user = driver.find_element_by_id('user_name')
+            elem_psw = driver.find_element_by_id('user_pass')
+            elem_code = driver.find_element_by_id('code')
 
-    if not is_login:
-        logger.debug("login failed")
-        driver.quit()
-        exit()
+            is_login = False
+            login_times = 0
 
-    # driver.maximize_window()
-    # click to modify profile,
-    time.sleep(10)
-    driver.switch_to.window(driver.window_handles[-1])
+            while login_times < 20:
+                captcha = captcha_processor()
+                if len(captcha) == 4:
+                    elem_user.send_keys(user_name)
+                    elem_psw.send_keys(password)
+                    elem_code.send_keys(captcha)
+                    click_login = driver.find_element_by_class_name('login_button')
+                    click_login.click()
+                    time.sleep(5)
 
-    modify_profile(driver)
+                    if len(driver.window_handles) == 2:
+                        is_login = True
+                        break
+                    else:
+                        current_win = driver.current_window_handle
+                        close_button = driver.find_element_by_class_name('close_button')
+                        close_button.get_attribute('href')
+                        time.sleep(1)
+                        close_button.click()
+                        time.sleep(1)
 
-    logger.debug("-----course 1-------")
-    study_course(course_driver=driver, course_name="aaaa")
+                        # refresh captcha
+                        change_testword = driver.find_element_by_class_name('change_testword')
+                        change_testword.get_attribute('href')
+                        change_testword.click()
+                        time.sleep(1)
+                        login_times = login_times + 1
+                        logger.debug('login times: ' + str(login_times))
 
-    logger.debug("-----course 2-------")
-    study_course(driver, "aaaa")
+                        elem_user.clear()
+                        elem_psw.clear()
+                        elem_code.clear()
+                else:
+                    # refresh captcha
+                    change_testword = driver.find_element_by_class_name('change_testword')
+                    change_testword.get_attribute('href')
+                    change_testword.click()
+                    time.sleep(1)
+                    login_times = login_times + 1
+                    logger.debug("login times: " + str(login_times))
 
-    logger.debug("-----course 3-------")
-    study_course(driver, "aaaa")
+                    elem_user.clear()
+                    elem_psw.clear()
+                    elem_code.clear()
 
-    time.sleep(10)
-    driver.quit()
+            if not is_login:
+                logger.debug("login failed")
+                driver.quit()
+                exit()
 
-    test_send_email = send_email.SendEmail()
-    test_send_email.send_msg()
+            # driver.maximize_window()
+            # click to modify profile,
+            time.sleep(10)
+            driver.switch_to.window(driver.window_handles[-1])
 
-    exit()
+            modify_profile(driver)
+
+            logger.debug("-----course 1-------")
+            study_course(course_driver=driver, course_name="aaaa")
+
+            logger.debug("-----course 2-------")
+            study_course(driver, "aaaa")
+
+            logger.debug("-----course 3-------")
+            study_course(driver, "aaaa")
+
+            time.sleep(10)
+            driver.quit()
+
+            test_send_email = send_email.SendEmail()
+            test_send_email.send_msg()
+        else:
+            time.sleep(60)
+            continue
+
+
