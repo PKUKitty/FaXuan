@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
     while True:
         now_hour = datetime.datetime.now().strftime('%H')
-        if now_hour == "01":
+        if now_hour == "01" or now_hour == "05":
             firefox_capabilities = DesiredCapabilities.FIREFOX
             firefox_capabilities['marionette'] = True
             firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
@@ -249,26 +249,43 @@ if __name__ == '__main__':
             # driver.maximize_window()
             # click to modify profile,
             time.sleep(10)
-            driver.switch_to.window(driver.window_handles[-1])
 
-            modify_profile(driver)
+            if now_hour == "01":
+                driver.switch_to.window(driver.window_handles[-1])
 
-            logger.debug("-----course 1-------")
-            study_course(course_driver=driver, course_name="aaaa")
+                modify_profile(driver)
 
-            logger.debug("-----course 2-------")
-            study_course(driver, "aaaa")
+                logger.debug("-----course 1-------")
+                study_course(course_driver=driver, course_name="aaaa")
 
-            logger.debug("-----course 3-------")
-            study_course(driver, "aaaa")
+                logger.debug("-----course 2-------")
+                study_course(driver, "aaaa")
+
+                logger.debug("-----course 3-------")
+                study_course(driver, "aaaa")
+
+            if now_hour == "05":
+                driver.switch_to.window(driver.window_handles[-1])
+                my_home_page = driver.find_element_by_xpath(".//a[contains(@href, 'base.index2(0)')]")
+                my_home_page.get_attribute('href')
+                my_home_page.click()
+                time.sleep(1)
+
+                today_point = driver.find_element_by_id('todypoint')
+                today_point_text = today_point.text
+
+                today_total_point = driver.find_element_by_id('todaytpoint')
+                today_total_point_text = today_total_point.text
+
+                point_rank = driver.find_element_by_id('pointRank')
+                point_rank_text = point_rank.text
+
+                test_send_email = send_email.SendEmail()
+                test_send_email.send_msg(today_point_text + ";" + today_total_point_text + ";" + point_rank_text)
 
             time.sleep(10)
             driver.quit()
 
-            test_send_email = send_email.SendEmail()
-            test_send_email.send_msg()
         else:
             time.sleep(60)
             continue
-
-

@@ -15,8 +15,8 @@ class SendEmail:
     receiver = 'yujun@travelsky.com'
     smtp_server = 'smtpav.travelsky.com'
 
-    def send_msg(self):
-        msg = MIMEText('fx login, success', 'text', 'UTF-8')
+    def send_msg(self, msg_content):
+        msg = MIMEText(msg_content, 'text', 'UTF-8')
         msg['Subject'] = Header(self.subject, 'utf-8')
 
         smtp = smtplib.SMTP()
