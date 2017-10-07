@@ -179,8 +179,7 @@ if __name__ == '__main__':
 
     while True:
         now_hour = datetime.datetime.now().strftime('%H')
-
-        if now_hour == str(1):
+        if now_hour == "01":
             firefox_capabilities = DesiredCapabilities.FIREFOX
             firefox_capabilities['marionette'] = True
             firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
