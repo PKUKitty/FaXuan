@@ -177,9 +177,16 @@ if __name__ == '__main__':
 
     # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
+    each_day_task_complete = False
+
     while True:
         now_hour = datetime.datetime.now().strftime('%H')
-        if now_hour == "01" or now_hour == "05":
+
+        if now_hour == "00":
+            # reset status
+            each_day_task_complete = False
+
+        if not each_day_task_complete and (now_hour == "01" or now_hour == "05"):
             firefox_capabilities = DesiredCapabilities.FIREFOX
             firefox_capabilities['marionette'] = True
             firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
@@ -282,6 +289,8 @@ if __name__ == '__main__':
 
                 test_send_email = send_email.SendEmail()
                 test_send_email.send_msg(today_point_text + ";" + today_total_point_text + ";" + point_rank_text)
+
+                each_day_task_complete = True
 
             time.sleep(10)
             driver.quit()
