@@ -1,4 +1,5 @@
 # coding=utf-8
+import json
 import logging
 import logging.handlers
 import time
@@ -18,6 +19,13 @@ from selenium.webdriver import DesiredCapabilities
 import send_email
 
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
+
+
+def parse_config(file_name):
+    config_file = open(file_name)
+    json_config = json.load(config_file)
+    config_file.close()
+    return json_config
 
 
 def ger_random_qq():
@@ -161,8 +169,12 @@ def captcha_processor():
 
 
 if __name__ == '__main__':
-    user_name = '15094279360'
-    password = 'y888888'
+
+    CONFIG_FILE = "/home/yujun/PycharmProjects/FaXuan/fx_login.conf"
+    config = parse_config(CONFIG_FILE)
+    user_info = config['user0']
+    user_name = user_info['user_name']
+    password = user_info['password']
 
     LOG_FILE = '/home/yujun/PycharmProjects/FaXuan/fx_login.log'
     handler = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=1024 * 1024, backupCount=5)
