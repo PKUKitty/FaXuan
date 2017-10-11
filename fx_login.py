@@ -17,6 +17,7 @@ from PIL import Image, ImageEnhance
 from selenium.webdriver import DesiredCapabilities
 
 import send_email
+from config import Config
 
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
 
@@ -175,11 +176,9 @@ def captcha_processor():
 
 if __name__ == '__main__':
 
-    CONFIG_FILE = "/home/yujun/PycharmProjects/FaXuan/fx_login.conf"
-    config = parse_config(CONFIG_FILE)
-    user_info = config['user0']
-    user_name = user_info['user_name']
-    password = user_info['password']
+    config = Config.get_instance()
+    user_name = config.get_str('user0', 'user_name')
+    password = config.get_str('user0', 'password')
 
     LOG_FILE = '/home/yujun/PycharmProjects/FaXuan/fx_login.log'
     handler = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=1024 * 1024, backupCount=5)
