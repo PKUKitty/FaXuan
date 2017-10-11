@@ -40,18 +40,22 @@ def modify_profile(profile_driver):
     modify_pro.get_attribute("href")
     modify_pro.click()
 
+    time.sleep(5)
     user_info_address = profile_driver.find_element_by_id('userAddress')
-    user_info_address.send_keys('beijing')
+    user_info_address.clear()
+    input_address = "China Beijing"
+    user_info_address.send_keys(input_address)
 
     user_info_qq = profile_driver.find_element_by_id('userinfoQQ')
+    user_info_qq.clear()
     user_info_qq.send_keys(ger_random_qq())
 
-    time.sleep(2)
+    time.sleep(5)
     var = profile_driver.current_window_handle
     user_info_save = profile_driver.find_element_by_id('userInfo_2_queren')
     user_info_save.click()
 
-    time.sleep(2)
+    time.sleep(5)
     current_win = profile_driver.current_window_handle
     user_info_confirm = profile_driver.find_element_by_id('popalertConfirm')
     user_info_confirm.click()
@@ -75,18 +79,19 @@ def study_course(course_driver, course_name):
     course_name = course_driver.find_element_by_xpath('/html/body/div/div/ul/li/div/a')
     course_name.get_attribute('href')
     course_name.click()
-    time.sleep(3)
+    time.sleep(5)
 
     # exs
     driver.switch_to.window(driver.window_handles[-1])
     exs_click = course_driver.find_element_by_xpath(".//ul[@class='coursetab clear']/li[3]")
     exs_click.click()
     logger.debug("exs_click end")
+    time.sleep(5)
 
     start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1103')]")
     start_exs_click.get_attribute('href')
     start_exs_click.click()
-    time.sleep(1)
+    time.sleep(5)
 
     course_driver.switch_to.window(driver.window_handles[-1])
     time.sleep(10)
@@ -94,7 +99,7 @@ def study_course(course_driver, course_name):
     commit_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, 'myCommit')]")
     commit_exs_click.get_attribute('href')
     commit_exs_click.click()
-    time.sleep(1)
+    time.sleep(5)
 
     current_win = driver.current_window_handle
     exit_exs_confirm = course_driver.find_element_by_id('popwinConfirm')
@@ -130,7 +135,7 @@ def study_course(course_driver, course_name):
     exit_study.click()
     logger.debug("exit study")
 
-    time.sleep(1)
+    time.sleep(5)
     # current_win = driver.current_window_handle
     exit_study_confirm = driver.find_element_by_id('popwinConfirm')
     # exit_study_confirm.get_attribute('href')
@@ -190,15 +195,18 @@ if __name__ == '__main__':
     # redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
 
     each_day_task_complete = False
+    RESET_TASK_STATUS_TIME = "00"
+    TASK_STUDY_COURSE_TIME = "01"
+    TASK_RE_LOGIN_TIME = "05"
 
     while True:
         now_hour = datetime.datetime.now().strftime('%H')
 
-        if now_hour == "00":
+        if now_hour == RESET_TASK_STATUS_TIME:
             # reset status
             each_day_task_complete = False
 
-        if not each_day_task_complete and (now_hour == "01" or now_hour == "05"):
+        if not each_day_task_complete and (now_hour == TASK_STUDY_COURSE_TIME or now_hour == TASK_RE_LOGIN_TIME):
             firefox_capabilities = DesiredCapabilities.FIREFOX
             firefox_capabilities['marionette'] = True
             firefox_capabilities['binary'] = '/usr/local/bin/geckodriver'
@@ -206,7 +214,7 @@ if __name__ == '__main__':
             driver = webdriver.Firefox(capabilities=firefox_capabilities,
                                        log_path='/home/yujun/PycharmProjects/FaXuan/geckodriver.log')
             driver.get(HOME_PAGE_URL)
-            time.sleep(1)
+            time.sleep(5)
 
             elem_user = driver.find_element_by_id('user_name')
             elem_psw = driver.find_element_by_id('user_pass')
@@ -269,7 +277,7 @@ if __name__ == '__main__':
             # click to modify profile,
             time.sleep(10)
 
-            if now_hour == "01":
+            if now_hour == TASK_STUDY_COURSE_TIME:
                 driver.switch_to.window(driver.window_handles[-1])
 
                 modify_profile(driver)
@@ -283,7 +291,7 @@ if __name__ == '__main__':
                 logger.debug("-----course 3-------")
                 study_course(driver, "aaaa")
 
-            if now_hour == "05":
+            if now_hour == TASK_RE_LOGIN_TIME:
                 driver.switch_to.window(driver.window_handles[-1])
                 my_home_page = driver.find_element_by_xpath(".//a[contains(@href, 'base.index2(0)')]")
                 my_home_page.get_attribute('href')

@@ -2,8 +2,17 @@ README
 
 For father
 
+Needed libraries:
+
+1. webdriver for Firefox
+2. PIL
+3. pytesseract
+
+
 Usage:
 
-nohup ./fx_login.sh &
+1. modify the fx_login.conf.template, save as fx_login.conf
+
+2. nohup ./fx_login.sh &
 
 

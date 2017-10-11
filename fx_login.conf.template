@@ -1,0 +1,17 @@
+{
+   "email":
+    {
+        "user_name":"***@qq.com",
+        "password":"****",
+        "sender":"***@qq.com",
+        "receiver":"***@qq.com",
+        "smtp_server":"**.qq.com",
+    },
+    "user0":  
+    {     
+        "user_name":"***",  
+        "password":"***",  
+        "province":"***",
+	"cpc":0
+    }
+}
