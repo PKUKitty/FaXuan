@@ -1,5 +1,7 @@
 import MySQLdb
 
+from config import Config
+
 
 class FaXuanUserInfo:
     user_name = ''
@@ -15,11 +17,11 @@ class FaXuanUserInfo:
 
 
 class MySqlConn:
-    host = '127.0.0.1'
-    port = 3306
-    user = 'root'
-    passwd = '123456'
-    db = 'faxuan'
+    host = Config.get_str('mysql', 'host')
+    port = Config.get_str('mysql', 'port')
+    user = Config.get_str('mysql', 'user')
+    passwd = Config.get_str('mysql', 'passwd')
+    db = Config.get_str('mysql', 'db')
     is_multi_thread = False
 
     __is_connected = False

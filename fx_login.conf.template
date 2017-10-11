@@ -7,6 +7,14 @@
         "receiver":"***@qq.com",
         "smtp_server":"**.qq.com",
     },
+    "mysql":
+    {
+        "host":"127.0.0.1",
+        "port":3306,
+        "user":"***",
+        "passwd":"***",
+        "db":"***"
+    },
     "user0":  
     {     
         "user_name":"***",  
