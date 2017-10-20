@@ -274,7 +274,7 @@ if __name__ == '__main__':
 
             # driver.maximize_window()
             # click to modify profile,
-            time.sleep(10)
+            time.sleep(20)
 
             if now_hour == TASK_STUDY_COURSE_TIME:
                 driver.switch_to.window(driver.window_handles[-1])

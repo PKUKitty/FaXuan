@@ -32,4 +32,4 @@ class SendEmail:
 
 if __name__ == '__main__':
     email = SendEmail()
-    email.send_msg('tesssssst')
+    email.send_msg("20171019 test")
