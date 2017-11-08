@@ -56,7 +56,7 @@ def modify_profile(profile_driver):
     user_info_save = profile_driver.find_element_by_id('userInfo_2_queren')
     user_info_save.click()
 
-    time.sleep(5)
+    time.sleep(10)
     current_win = profile_driver.current_window_handle
     user_info_confirm = profile_driver.find_element_by_id('popalertConfirm')
     user_info_confirm.click()
@@ -122,7 +122,7 @@ def study_course(course_driver, course_name):
     course_driver.close()
 
     start = time.time()
-    duration = 30 * 60
+    duration = 20 * 60
     while True:
         if time.time() - start > duration:
             break
@@ -195,8 +195,8 @@ if __name__ == '__main__':
 
     each_day_task_complete = False
     RESET_TASK_STATUS_TIME = "00"
-    TASK_STUDY_COURSE_TIME = "01"
-    TASK_RE_LOGIN_TIME = "05"
+    TASK_STUDY_COURSE_TIME = "08"
+    TASK_RE_LOGIN_TIME = '%02d' % ((int(TASK_STUDY_COURSE_TIME) + 2) % 24)
 
     while True:
         now_hour = datetime.datetime.now().strftime('%H')
