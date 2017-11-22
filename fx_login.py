@@ -89,7 +89,7 @@ def study_course(course_driver, course_name):
     logger.debug("exs_click end")
     time.sleep(5)
 
-    start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1103')]")
+    start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1882')]")
     start_exs_click.get_attribute('href')
     start_exs_click.click()
     time.sleep(5)
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 
     each_day_task_complete = False
     RESET_TASK_STATUS_TIME = "00"
-    TASK_STUDY_COURSE_TIME = "08"
+    TASK_STUDY_COURSE_TIME = "09"
     TASK_RE_LOGIN_TIME = '%02d' % ((int(TASK_STUDY_COURSE_TIME) + 2) % 24)
 
     while True:
