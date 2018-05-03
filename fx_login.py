@@ -18,8 +18,36 @@ from selenium.webdriver import DesiredCapabilities
 
 import send_email
 from config import Config
+from redis_processor import RedisProcessor
 
 HOME_PAGE_URL = 'http://www.faxuan.net/site/yunnan/'
+
+
+def get_option_num(option_str):
+    if option_str == "A":
+        return "1"
+    if option_str == "B":
+        return "2"
+    if option_str == "C":
+        return "3"
+    if option_str == "D":
+        return "4"
+
+
+def query_redis(question, q_type):
+    redis = RedisProcessor()
+    if q_type == '单选题':
+        res = redis.get_single_choice(question)
+        if res is None:
+            return str(random.randint(1, 4))
+    if q_type == '多选题':
+        res = redis.get_multi_choice(question)
+        if res is None:
+            return ['1', '2', '3', '4']
+    if q_type == '判断题':
+        res = redis.get_true_false(question)
+        if res is None:
+            return False
 
 
 def parse_config(file_name):
@@ -77,7 +105,7 @@ def study_course(course_driver, course_name):
 
     # start study
     # include all must courses
-    course_name = course_driver.find_element_by_xpath('/html/body/div/div/ul/li/div/a')
+    course_name = course_driver.find_element_by_xpath('/html/body/div/div/ul/li/div/a/h3')
     course_name.get_attribute('href')
     course_name.click()
     time.sleep(5)
@@ -89,10 +117,41 @@ def study_course(course_driver, course_name):
     logger.debug("exs_click end")
     time.sleep(5)
 
-    start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '1882')]")
+    start_exs_click = course_driver.find_element_by_xpath(".//a[contains(@href, '2165')]")
     start_exs_click.get_attribute('href')
     start_exs_click.click()
     time.sleep(5)
+
+    # TODO input the exs answer
+    # 去掉、(单选题)前缀
+    each_question = course_driver.find_element_by_id('ti_title').text
+    each_question_type = each_question[2:4]
+    each_question_str = each_question[6:]
+
+    res = query_redis(each_question_str, each_question_type)
+    if each_question_type == '单选题':
+        for idx in range(0, 3):
+            xpath = ".//ul[@id='ti_item']/li[" + str(idx + 1) + "]"
+            # 去掉A、
+            option = course_driver.find_element_by_xpath(xpath)
+            if option.text[2:] == res:
+                option.click()
+                break
+    if each_question_type == '多选题':
+        for idx in range(0, 3):
+            xpath = ".//ul[@id='ti_item']/li[" + str(idx + 1) + "]"
+            # 去掉A、
+            option = course_driver.find_element_by_xpath(xpath)
+            if option.text[2:] in res:  # array
+                option.click()
+    if each_question_type == '判断题':
+        if res == 1:  # 对
+            xpath_tmp = ".//ul[@id='ti_item']/li[1]"
+        else:
+            xpath_tmp = ".//ul[@id='ti_item']/li[2]"
+        course_driver.find_element_by_xpath(xpath_tmp).click()
+
+    # TODO input the exs answer
 
     course_driver.switch_to.window(driver.window_handles[-1])
     time.sleep(10)
@@ -109,14 +168,30 @@ def study_course(course_driver, course_name):
     logger.debug("exit_exs_confirm")
 
     # write exs into redis
-    # paper_key_value = {}
-    # results = course_driver.find_elements_by_id('result')
-    # tmp_count = 0
-    # while tmp_count < 10:
-    #     xpath = ".//ul[@id='result']/li[" + str(tmp_count + 1) + "]/h3"
-    #     question = course_driver.find_element_by_xpath(xpath)
-    #     print 'question: ' + question.text
-    #     tmp_count = tmp_count + 1
+    paper_key_value = {}
+    current_page = 0
+    tmp_count = 0
+    redis_processor = RedisProcessor()
+    while current_page < 5 and tmp_count < 10:
+        xpath = ".//ul[@id='result']/li[" + str(tmp_count + 1) + "]/h3"
+        question = course_driver.find_element_by_xpath(xpath)
+        question_str = question.text[7:]
+        if tmp_count == 9:
+            question_str = question.text[8:]
+
+        logger.debug('question: ' + question_str)
+
+        # <strong>正确答案：A　　用户选择：</strong>
+        ans_xpath = ".//ul[@id='result']/li[" + str(tmp_count + 1) + "]/div/strong"
+        answer_str = course_driver.find_element_by_xpath(ans_xpath).text[5:6]
+        # A->1,B->2,C->3,D->4
+        answer_num = get_option_num(answer_str)
+        option_xpath = ".//ul[@id='result']/li[" + str(tmp_count + 1) + "]/ul/li[" + answer_num + "]"
+        option_str = course_driver.find_element_by_xpath(option_xpath).text[2:]
+        logger.debug('answer: ' + option_str)
+        if question_str and option_str:
+            redis_processor.insert_single_choice(question_str, option_str)
+        tmp_count = tmp_count + 1
 
     # close tab
     course_driver.close()
@@ -195,7 +270,7 @@ if __name__ == '__main__':
 
     each_day_task_complete = False
     RESET_TASK_STATUS_TIME = "00"
-    TASK_STUDY_COURSE_TIME = "09"
+    TASK_STUDY_COURSE_TIME = "22"
     TASK_RE_LOGIN_TIME = '%02d' % ((int(TASK_STUDY_COURSE_TIME) + 2) % 24)
 
     while True:
@@ -279,15 +354,12 @@ if __name__ == '__main__':
             if now_hour == TASK_STUDY_COURSE_TIME:
                 driver.switch_to.window(driver.window_handles[-1])
 
-                modify_profile(driver)
+                # modify_profile(driver)
 
                 logger.debug("-----course 1-------")
                 study_course(course_driver=driver, course_name="aaaa")
 
                 logger.debug("-----course 2-------")
-                study_course(driver, "aaaa")
-
-                logger.debug("-----course 3-------")
                 study_course(driver, "aaaa")
 
             if now_hour == TASK_RE_LOGIN_TIME:
